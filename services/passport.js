@@ -1,4 +1,5 @@
 const passport = require('passport')
+require('dotenv').config()
 // const JWTStrategy = require('passport-jwt').Strategy;
 // const Extractors = require('passport-jwt').ExtractJwt;
 
@@ -19,7 +20,7 @@ const opts = {}
 const UserModel = require('./database')
 
 opts.jwtFromRequest = ExtractJwt.fromAuthHeaderAsBearerToken();
-opts.secretOrKey = 'Random string'; // robust secret string put in environment variables
+opts.secretOrKey = process.env.SECRET_KEY; // robust secret string put in environment variables
 
 passport.use(new JwtStrategy(opts, function(jwt_payload, done) {
     // console.log(jwt_payload)
