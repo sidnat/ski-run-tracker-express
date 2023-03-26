@@ -1,5 +1,6 @@
 const express = require('express');
 const app = express();
+const port = 5000;
 const cors = require('cors');
 const { hashSync, compareSync } = require('bcrypt');
 const UserModel = require('./config/database');
@@ -13,6 +14,20 @@ app.use(passport.initialize());
 
 require('./config/passport')
 
+// var whitelist = ['http://10.0.0.116:3000', 'http://localhost:3000']
+
+// var corsOptions = {
+//   origin: function (origin, callback) {
+//     if (whitelist.indexOf(origin) !== -1) {
+//       callback(null, true)
+//     } else {
+//       callback(new Error('Not allowed by CORS'))
+//     }
+//   },
+//   optionsSuccessStatus: 200
+// }
+
+//add user to db
 app.post('/register', (req, res) => {
     const user = new UserModel({
         username: req.body.username,
@@ -37,6 +52,7 @@ app.post('/register', (req, res) => {
     })
 })
 
+//login validation
 app.post('/login', (req, res) => {
     console.log('Login post request');
     UserModel.findOne({ username: req.body.username }).then(user => {
@@ -80,4 +96,9 @@ app.get('/secureroute', passport.authenticate('jwt', {session: false}), (req, re
     })
 })
 
-app.listen(5000, () => console.log("Listening to port 5000"));
+// add run
+// get runs by user id/token
+
+app.listen(port, () => {
+    console.log(`Listening to port ${port}`)
+  })
