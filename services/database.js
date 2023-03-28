@@ -4,7 +4,9 @@ require('dotenv').config()
 mongoose.connect(`mongodb+srv://${process.env.MONGO_USERNAME}:${process.env.MONGO_PASSWORD}@passport-jwt.tr4phig.mongodb.net/?retryWrites=true&w=majority`);
 
 const userSchema = mongoose.Schema({
-    username: String,
+    firstName: String,
+    lastName: String,
+    email: String,
     password: String
 })
 
