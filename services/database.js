@@ -8,8 +8,21 @@ const userSchema = mongoose.Schema({
     lastName: String,
     email: String,
     password: String
-})
+}, {
+    collection: 'users'
+});
 
+const runSchema = mongoose.Schema({
+    userId: String,
+    mountain: String,
+    trailName: String,
+    runCounter: Number,
+    runDate: Date,
+    bestRunTime: Number,
+}, {
+    collection: 'runs'
+});
 const UserModel = mongoose.model('User', userSchema);
+const RunModel = mongoose.model("Run", runSchema);
 
-module.exports = UserModel;
+module.exports = { UserModel, RunModel };
