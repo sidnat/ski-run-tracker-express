@@ -3,7 +3,7 @@ const app = express();
 const port = 5000;
 const cors = require('cors');
 const { hashSync, compareSync } = require('bcrypt');
-const UserModel = require('./services/database');
+const { UserModel, RunModel } = require('./services/database');
 const jwt = require('jsonwebtoken');
 const passport = require('passport');
 
@@ -30,6 +30,7 @@ var corsOptions = {
 //add user to db
 app.post('/register', (req, res) => {
     console.log(req.body)
+    console.log(UserModel)
     const user = new UserModel({
         firstName: req.body.firstName,
         lastName: req.body.lastName,
@@ -45,7 +46,7 @@ app.post('/register', (req, res) => {
                 id: user._id,
                 firstName: user.firstName,
                 lastName: user.lastName,
-                email: user.email,            
+                email: user.email,
             }
         })
     }).catch(err => {
@@ -59,56 +60,95 @@ app.post('/register', (req, res) => {
 
 //login validation
 app.post('/login', (req, res) => {
+    console.log(req.body.email)
     console.log('Login post request');
-    UserModel.findOne({ email: req.body.email }).then(user => {
-        if (!user) {
-            return res.status(401).send({
-                success: false,
-                message: "could not find the user"
+    UserModel.findOne({ email: req.body.email })
+        .then(user => {
+            console.log('test')
+            console.log(user)
+            if (!user) {
+                return res.status(401).send({
+                    success: false,
+                    message: "could not find the user"
+                })
+            }
+
+            if (!compareSync(req.body.password, user.password)) {
+                return res.status(401).send({
+                    success: false,
+                    message: "incorrect password"
+                })
+            }
+
+            const payload = {
+                username: user.username,
+                id: user._id
+            }
+            const secretOrPrivateKey = 'Random string' // robust secret string put in environment variables
+
+            const token = jwt.sign(payload, secretOrPrivateKey, { expiresIn: "1d" })
+
+            console.log('login test')
+            console.log(token)
+
+            return res.status(200).send({
+                success: true,
+                message: "logged in successfully",
+                token: "Bearer " + token
             })
-        }
+        })
+        .catch(err => {console.log(err)})
+})
 
-        if (!compareSync(req.body.password, user.password)) {
-            return res.status(401).send({
-                success: false,
-                message: "incorrect password"
-            })
-        }
+// app.get('/protected', passport.authenticate('jwt', { session: false }), (req, res) => {
+//     return res.status(200).send({
+//         success: true,
+//         user: {
+//             id: req.user._id,
+//             username: req.user.username
+//         }
+//     })
+// })
 
-        const payload = {
-            username: user.username,
-            id: user._id
-        }
-        const secretOrPrivateKey = 'Random string' // robust secret string put in environment variables
+app.post('/addRun', (req, res) => {
+    console.log(req.body)
+    console.log(RunModel)
+    const run = new RunModel({
+        userId: req.body.userId,
+        mountain: req.body.mountain,
+        trailName: req.body.trailName,
+        runCounter: req.body.runCounter,
+        runDate: req.body.runDate,
+    })
 
-        const token = jwt.sign(payload, secretOrPrivateKey, { expiresIn: "1d" })
-
-        return res.status(200).send({
+    run.save().then(run => {
+        res.send({
             success: true,
-            message: "logged in successfully",
-            token: "Bearer " + token
+            message: "run created",
+            run: {
+                id: run._id,
+                userID: run.userId,
+                mountain: run.mountain,
+                trailName: run.trailName,
+                runCounter: run.runCounter,
+                runDate: run.runDate,
+            }
+        })
+    }).catch(err => {
+        res.send({
+            success: false,
+            message: "run NOT created",
+            error: err
         })
     })
 })
 
-app.get('/protected', passport.authenticate('jwt', { session: false }), (req, res) => {
+app.get('/getRuns', passport.authenticate('jwt', { session: false }), (req, res) => {
     return res.status(200).send({
         success: true,
-        user: {
-            id: req.user._id,
-            username: req.user.username
-        }
+        message: "runs retrieved"
     })
 })
-
-app.post('/addrun', passport.authenticate('jwt', { session: false }), (req, res) => {
-    return res.status(200).send({
-        success: true,
-        message: "run added"
-    })
-})
-
-app.get('/getruns', passport.authenticate('jwt', { session: false }), (req, res) => {})
 
 // add run
 // get runs by user id/token
