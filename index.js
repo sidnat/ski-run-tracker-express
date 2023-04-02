@@ -38,24 +38,25 @@ app.post('/register', (req, res) => {
         password: hashSync(req.body.password, 10)
     })
 
-    user.save().then(user => {
-        res.send({
-            success: true,
-            message: "user created",
-            user: {
-                id: user._id,
-                firstName: user.firstName,
-                lastName: user.lastName,
-                email: user.email,
-            }
+    user.save()
+        .then(user => {
+            res.send({
+                success: true,
+                message: "user created",
+                user: {
+                    id: user._id,
+                    firstName: user.firstName,
+                    lastName: user.lastName,
+                    email: user.email,
+                }
+            })
+        }).catch(err => {
+            res.send({
+                success: false,
+                message: "user NOT created",
+                error: err
+            })
         })
-    }).catch(err => {
-        res.send({
-            success: false,
-            message: "user NOT created",
-            error: err
-        })
-    })
 })
 
 //login validation
@@ -97,7 +98,7 @@ app.post('/login', (req, res) => {
                 token: "Bearer " + token
             })
         })
-        .catch(err => {console.log(err)})
+        .catch(err => { console.log(err) })
 })
 
 // app.get('/protected', passport.authenticate('jwt', { session: false }), (req, res) => {
@@ -114,34 +115,63 @@ app.post('/addRun', (req, res) => {
     console.log(req.body)
     console.log(RunModel)
     const run = new RunModel({
-        userId: req.body.userId,
+        userID: req.body.userID,
         mountain: req.body.mountain,
         trailName: req.body.trailName,
         runCounter: req.body.runCounter,
         runDate: req.body.runDate,
     })
 
-    run.save().then(run => {
-        res.send({
-            success: true,
-            message: "run created",
-            run: {
-                id: run._id,
-                userID: run.userId,
-                mountain: run.mountain,
-                trailName: run.trailName,
-                runCounter: run.runCounter,
-                runDate: run.runDate,
-            }
+    console.log('run', run)
+
+    run.save()
+        .then(run => {
+            res.send({
+                success: true,
+                message: "run created",
+                run: {
+                    id: run._id,
+                    userID: run.userID,
+                    mountain: run.mountain,
+                    trailName: run.trailName,
+                    runCounter: run.runCounter,
+                    runDate: run.runDate,
+                }
+            })
+        }).catch(err => {
+            res.send({
+                success: false,
+                message: "run NOT created",
+                error: err
+            })
         })
-    }).catch(err => {
-        res.send({
-            success: false,
-            message: "run NOT created",
-            error: err
-        })
-    })
 })
+
+app.post('/deleteRun', (req, res) => {
+    console.log(req.body)
+    console.log(RunModel)
+    const run = new RunModel({
+        userID: req.body.userID,
+        mountain: req.body.mountain,
+        trailName: req.body.trailName
+    })
+
+    run.delete()
+        .then(run => {
+            res.send({
+                success: true,
+                message: "run deleted",
+            })
+        }).catch(err => {
+            res.send({
+                success: false,
+                message: "run NOT deleted",
+                error: err
+            })
+        })
+})
+
+
 
 app.get('/getRuns', passport.authenticate('jwt', { session: false }), (req, res) => {
     return res.status(200).send({
