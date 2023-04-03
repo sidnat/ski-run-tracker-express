@@ -116,10 +116,10 @@ app.post('/addRun', (req, res) => {
     console.log(RunModel)
     const run = new RunModel({
         userID: req.body.userID,
-        mountain: req.body.mountain,
+        mountainName: req.body.mountainName,
         trailName: req.body.trailName,
         runCounter: req.body.runCounter,
-        runDate: req.body.runDate,
+        date: req.body.date,
     })
 
     console.log('run', run)
@@ -132,10 +132,10 @@ app.post('/addRun', (req, res) => {
                 run: {
                     id: run._id,
                     userID: run.userID,
-                    mountain: run.mountain,
+                    mountainName: run.mountainName,
                     trailName: run.trailName,
                     runCounter: run.runCounter,
-                    runDate: run.runDate,
+                    date: run.date,
                 }
             })
         }).catch(err => {
@@ -149,15 +149,16 @@ app.post('/addRun', (req, res) => {
 
 app.post('/deleteRun', (req, res) => {
     console.log(req.body)
-    console.log(RunModel)
-    const run = new RunModel({
-        userID: req.body.userID,
-        mountain: req.body.mountain,
-        trailName: req.body.trailName
-    })
 
-    run.delete()
+    const run = {
+        userID: req.body.userID,
+        mountainName: req.body.mountainName,
+        trailName: req.body.trailName
+    }
+
+    RunModel.deleteOne(run)
         .then(run => {
+            console.log('run deleted', run)
             res.send({
                 success: true,
                 message: "run deleted",
@@ -180,6 +181,9 @@ app.get('/getRuns', passport.authenticate('jwt', { session: false }), (req, res)
     })
 })
 
+app.get('/updateRun', (req, res) => {
+    req.body.updatedRunCount
+})
 // add run
 // get runs by user id/token
 
