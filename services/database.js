@@ -14,10 +14,10 @@ const userSchema = mongoose.Schema({
 
 const runSchema = mongoose.Schema({
     userID: String,
-    mountain: String,
+    mountainName: String,
     trailName: String,
     runCounter: Number,
-    runDate: Date,
+    date: Date,
     // bestRunTime: Number,
 }, {
     collection: 'runs'
