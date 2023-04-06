@@ -6,6 +6,7 @@ const { hashSync, compareSync } = require('bcrypt');
 const { UserModel, RunModel } = require('./services/database');
 const jwt = require('jsonwebtoken');
 const passport = require('passport');
+const jwt_decode = require('jwt-decode');
 
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
@@ -101,16 +102,6 @@ app.post('/login', (req, res) => {
         .catch(err => { console.log(err) })
 })
 
-// app.get('/protected', passport.authenticate('jwt', { session: false }), (req, res) => {
-//     return res.status(200).send({
-//         success: true,
-//         user: {
-//             id: req.user._id,
-//             username: req.user.username
-//         }
-//     })
-// })
-
 app.post('/addRun', (req, res) => {
     console.log(req.body)
     console.log(RunModel)
@@ -172,18 +163,30 @@ app.post('/deleteRun', (req, res) => {
         })
 })
 
+app.post('/updateRun', (req, res) => {
+    console.log(typeof req.body.runCounter)
+    const run = {
+        "userID": req.body.userID,
+        "mountainName": req.body.mountainName,
+        "trailName": req.body.trailName
+    }
 
-
-app.get('/getRuns', passport.authenticate('jwt', { session: false }), (req, res) => {
-    return res.status(200).send({
-        success: true,
-        message: "runs retrieved"
-    })
+    RunModel.updateOne(run, { $set: { "runCounter": req.body.runCounter } })
+        .then(run => {
+            console.log('run updated', run)
+            res.send({
+                success: true,
+                message: "run updated",
+            })
+        }).catch(err => {
+            res.send({
+                success: false,
+                message: "run NOT updated",
+                error: err
+            })
+        })
 })
 
-app.get('/updateRun', (req, res) => {
-    req.body.updatedRunCount
-})
 // add run
 // get runs by user id/token
 
