@@ -189,6 +189,44 @@ app.post('/updateRun', (req, res) => {
 
 // add run
 // get runs by user id/token
+// app.get('/getRuns', passport.authenticate('jwt', { session: false }), (req, res) => {
+//     return res.status(200).send({
+//         success: true,
+//         message: "runs retrieved"
+//     })
+// }) 
+
+app.get('/getRuns', (req, res) => {
+    const decoded = jwt_decode(req.query.userID)
+
+    const userMap = {
+        "userID": decoded,id,
+        "mountainName": req.query.mountainName
+    }
+
+    RunModel.find(userMap)
+        .then(runs => {
+            console.log('found runs', runs)
+
+            //map through each run to return only the data we want
+            res.send({
+                success: true,
+                message: "runs found",
+                runs
+            })
+
+            // return res.status(200).send({
+            //     success: true,
+            //     message: "runs retrieved"
+            // })
+        }).catch(err => {
+            res.send({
+                success: false,
+                message: "runs NOT found",
+                error: err
+            })
+        })
+})
 
 app.listen(port, () => {
     console.log(`Listening to port ${port}`)
