@@ -199,8 +199,9 @@ app.post('/updateRun', (req, res) => {
 app.get('/getRuns', (req, res) => {
     const decoded = jwt_decode(req.query.userID)
 
+    console.log(decoded)
     const userMap = {
-        "userID": decoded,id,
+        "userID": decoded.id,
         "mountainName": req.query.mountainName
     }
 
