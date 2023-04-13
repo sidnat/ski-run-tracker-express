@@ -30,8 +30,8 @@ var corsOptions = {
 
 //add user to db
 app.post('/register', (req, res) => {
-    console.log(req.body)
-    console.log(UserModel)
+    // console.log(req.body)
+    // console.log(UserModel)
     const user = new UserModel({
         firstName: req.body.firstName,
         lastName: req.body.lastName,
@@ -62,12 +62,12 @@ app.post('/register', (req, res) => {
 
 //login validation
 app.post('/login', (req, res) => {
-    console.log(req.body.email)
-    console.log('Login post request');
+    // console.log(req.body.email)
+    // console.log('Login post request');
     UserModel.findOne({ email: req.body.email })
         .then(user => {
-            console.log('test')
-            console.log(user)
+            // console.log('test')
+            // console.log(user)
             if (!user) {
                 return res.status(401).send({
                     success: false,
@@ -90,8 +90,8 @@ app.post('/login', (req, res) => {
 
             const token = jwt.sign(payload, secretOrPrivateKey, { expiresIn: "1d" })
 
-            console.log('login test')
-            console.log(token)
+            // console.log('login test')
+            // console.log(token)
 
             return res.status(200).send({
                 success: true,
@@ -103,8 +103,8 @@ app.post('/login', (req, res) => {
 })
 
 app.post('/addRun', (req, res) => {
-    console.log(req.body)
-    console.log(RunModel)
+    // console.log(req.body)
+    // console.log(RunModel)
     const run = new RunModel({
         userID: req.body.userID,
         mountainName: req.body.mountainName,
@@ -113,7 +113,7 @@ app.post('/addRun', (req, res) => {
         date: req.body.date,
     })
 
-    console.log('run', run)
+    // console.log('run', run)
 
     run.save()
         .then(run => {
@@ -139,7 +139,7 @@ app.post('/addRun', (req, res) => {
 })
 
 app.post('/deleteRun', (req, res) => {
-    console.log(req.body)
+    // console.log(req.body)
 
     const run = {
         userID: req.body.userID,
@@ -149,7 +149,7 @@ app.post('/deleteRun', (req, res) => {
 
     RunModel.deleteOne(run)
         .then(run => {
-            console.log('run deleted', run)
+            // console.log('run deleted', run)
             res.send({
                 success: true,
                 message: "run deleted",
@@ -164,7 +164,7 @@ app.post('/deleteRun', (req, res) => {
 })
 
 app.post('/updateRun', (req, res) => {
-    console.log(typeof req.body.runCounter)
+    // console.log(typeof req.body.runCounter)
     const run = {
         "userID": req.body.userID,
         "mountainName": req.body.mountainName,
@@ -173,7 +173,7 @@ app.post('/updateRun', (req, res) => {
 
     RunModel.updateOne(run, { $set: { "runCounter": req.body.runCounter } })
         .then(run => {
-            console.log('run updated', run)
+            // console.log('run updated', run)
             res.send({
                 success: true,
                 message: "run updated",
@@ -199,34 +199,63 @@ app.post('/updateRun', (req, res) => {
 app.get('/getRuns', (req, res) => {
     const decoded = jwt_decode(req.query.userID)
 
-    console.log(decoded)
+    // console.log(decoded)
     const userMap = {
         "userID": decoded.id,
         "mountainName": req.query.mountainName
     }
 
-    RunModel.find(userMap)
-        .then(runs => {
-            console.log('found runs', runs)
+    if (req.query.sortField && req.query.sortDir) {
+        const field = req.query.sortField
+        const sort = {}
+        sort[field] = req.query.sortDir === 'ASC' ? 1 : -1
 
-            //map through each run to return only the data we want
-            res.send({
-                success: true,
-                message: "runs found",
-                runs
-            })
+        RunModel.aggregate(
+            [
+                { $match: userMap },
+                { $sort: sort }
+            ]
+        )
+            .then(runs => {
+                // console.log('found runs', runs)
 
-            // return res.status(200).send({
-            //     success: true,
-            //     message: "runs retrieved"
-            // })
-        }).catch(err => {
-            res.send({
-                success: false,
-                message: "runs NOT found",
-                error: err
+                //map through each run to return only the data we want
+                res.send({
+                    success: true,
+                    message: "asc sort runs found",
+                    runs
+                })
+            }).catch(err => {
+                res.send({
+                    success: false,
+                    message: "asc sort runs NOT found",
+                    error: err
+                })
             })
-        })
+    } else {
+        RunModel.find(userMap)
+            .then(runs => {
+                // console.log('found runs', runs)
+
+                //map through each run to return only the data we want
+                res.send({
+                    success: true,
+                    message: "runs found",
+                    runs
+                })
+
+                // return res.status(200).send({
+                //     success: true,
+                //     message: "runs retrieved"
+                // })
+            }).catch(err => {
+                res.send({
+                    success: false,
+                    message: "runs NOT found",
+                    error: err
+                })
+            })
+    }
 })
 
 app.listen(port, () => {
