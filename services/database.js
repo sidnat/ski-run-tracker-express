@@ -17,7 +17,8 @@ const runSchema = mongoose.Schema({
     mountainName: String,
     trailName: String,
     runCounter: Number,
-    date: Date,
+    difficulty: String,
+    date: String,
     // bestRunTime: Number,
 }, {
     collection: 'runs'
