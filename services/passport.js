@@ -1,23 +1,10 @@
 const passport = require('passport')
 require('dotenv').config()
-// const JWTStrategy = require('passport-jwt').Strategy;
-// const Extractors = require('passport-jwt').ExtractJwt;
 
-// const options = {
-//     secretOrKey: 'abc123keysecret',
-//     jwtFromRequest: Extractors.fromAuthHeaderAsBearerToken
-// }
-
-// const verify = () => {
-//     returns (null, {username: 'abc'})
-// }
-
-// passport.use(new JWTStrategy(options, verify))
-
-const JwtStrategy = require('passport-jwt').Strategy,
-    ExtractJwt = require('passport-jwt').ExtractJwt;
+const JwtStrategy = require('passport-jwt').Strategy
+const ExtractJwt = require('passport-jwt').ExtractJwt;
 const opts = {}
-const UserModel = require('./database')
+const { UserModel } = require('./database')
 
 opts.jwtFromRequest = ExtractJwt.fromAuthHeaderAsBearerToken();
 opts.secretOrKey = process.env.SECRET_KEY; // robust secret string put in environment variables
