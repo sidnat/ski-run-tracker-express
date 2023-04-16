@@ -7,6 +7,7 @@ const { UserModel, RunModel } = require('./services/database');
 const jwt = require('jsonwebtoken');
 const passport = require('passport');
 const jwt_decode = require('jwt-decode');
+require('dotenv').config()
 
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
@@ -86,9 +87,9 @@ app.post('/login', (req, res) => {
                 username: user.username,
                 id: user._id
             }
-            const secretOrPrivateKey = 'Random string' // robust secret string put in environment variables
+            const secretOrPrivateKey = process.env.SECRET_KEY
 
-            const token = jwt.sign(payload, secretOrPrivateKey, { expiresIn: "1d" })
+            const token = jwt.sign(payload, secretOrPrivateKey, { expiresIn: "14d" })
 
             // console.log('login test')
             // console.log(token)
@@ -102,14 +103,17 @@ app.post('/login', (req, res) => {
         .catch(err => { console.log(err) })
 })
 
-app.post('/addRun', (req, res) => {
+app.post('/addRun', passport.authenticate('jwt', { session: false }), (req, res) => {
+    const decoded = jwt_decode(req.headers.authorization)
     // console.log(req.body)
     // console.log(RunModel)
     const run = new RunModel({
-        userID: req.body.userID,
+        // userID: req.body.userID,
+        userID: decoded.id,
         mountainName: req.body.mountainName,
         trailName: req.body.trailName,
         runCounter: req.body.runCounter,
+        difficulty: req.body.difficulty,
         date: req.body.date,
     })
 
@@ -126,10 +130,12 @@ app.post('/addRun', (req, res) => {
                     mountainName: run.mountainName,
                     trailName: run.trailName,
                     runCounter: run.runCounter,
+                    difficulty: req.body.difficulty,
                     date: run.date,
                 }
             })
-        }).catch(err => {
+        })
+        .catch(err => {
             res.send({
                 success: false,
                 message: "run NOT created",
@@ -138,11 +144,12 @@ app.post('/addRun', (req, res) => {
         })
 })
 
-app.post('/deleteRun', (req, res) => {
+app.post('/deleteRun', passport.authenticate('jwt', { session: false }), (req, res) => {
+    const decoded = jwt_decode(req.headers.authorization)
     // console.log(req.body)
 
     const run = {
-        userID: req.body.userID,
+        userID: decoded.id,
         mountainName: req.body.mountainName,
         trailName: req.body.trailName
     }
@@ -154,7 +161,8 @@ app.post('/deleteRun', (req, res) => {
                 success: true,
                 message: "run deleted",
             })
-        }).catch(err => {
+        })
+        .catch(err => {
             res.send({
                 success: false,
                 message: "run NOT deleted",
@@ -163,10 +171,11 @@ app.post('/deleteRun', (req, res) => {
         })
 })
 
-app.post('/updateRun', (req, res) => {
+app.post('/updateRun', passport.authenticate('jwt', { session: false }), (req, res) => {
+    const decoded = jwt_decode(req.headers.authorization)
     // console.log(typeof req.body.runCounter)
     const run = {
-        "userID": req.body.userID,
+        "userID": decoded.id,
         "mountainName": req.body.mountainName,
         "trailName": req.body.trailName
     }
@@ -178,7 +187,8 @@ app.post('/updateRun', (req, res) => {
                 success: true,
                 message: "run updated",
             })
-        }).catch(err => {
+        })
+        .catch(err => {
             res.send({
                 success: false,
                 message: "run NOT updated",
@@ -195,9 +205,11 @@ app.post('/updateRun', (req, res) => {
 //         message: "runs retrieved"
 //     })
 // }) 
-
-app.get('/getRuns', (req, res) => {
-    const decoded = jwt_decode(req.query.userID)
+//, async (err, user, info) => {
+//    console.log('err: ', err, user, info);
+//}
+app.get('/getRuns', passport.authenticate('jwt', { session: false}), (req, res) => {
+    const decoded = jwt_decode(req.headers.authorization)
 
     // console.log(decoded)
     const userMap = {
@@ -206,9 +218,13 @@ app.get('/getRuns', (req, res) => {
     }
 
     if (req.query.sortField && req.query.sortDir) {
+        // console.log('sortF', req.query.sortField)
+        // console.log('sortDir', req.query.sortDir)
         const field = req.query.sortField
         const sort = {}
         sort[field] = req.query.sortDir === 'ASC' ? 1 : -1
+
+        // console.log('sort', sort)
 
         RunModel.aggregate(
             [
@@ -217,7 +233,7 @@ app.get('/getRuns', (req, res) => {
             ]
         )
             .then(runs => {
-                // console.log('found runs', runs)
+                console.log('found runs', runs)
 
                 //map through each run to return only the data we want
                 res.send({
@@ -225,7 +241,8 @@ app.get('/getRuns', (req, res) => {
                     message: "asc sort runs found",
                     runs
                 })
-            }).catch(err => {
+            })
+            .catch(err => {
                 res.send({
                     success: false,
                     message: "asc sort runs NOT found",
@@ -235,7 +252,7 @@ app.get('/getRuns', (req, res) => {
     } else {
         RunModel.find(userMap)
             .then(runs => {
-                // console.log('found runs', runs)
+                console.log('found runs', runs)
 
                 //map through each run to return only the data we want
                 res.send({
@@ -243,12 +260,8 @@ app.get('/getRuns', (req, res) => {
                     message: "runs found",
                     runs
                 })
-
-                // return res.status(200).send({
-                //     success: true,
-                //     message: "runs retrieved"
-                // })
-            }).catch(err => {
+            })
+            .catch(err => {
                 res.send({
                     success: false,
                     message: "runs NOT found",
